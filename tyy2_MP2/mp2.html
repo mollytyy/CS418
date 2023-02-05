@@ -1,0 +1,136 @@
+<!DOCTYPE HTML> 
+<html lang="en"> 
+<head>
+<title>MP2: Terrain Modeling (tyy2) </title>
+<meta charset="utf-8"> 
+</head>
+
+<script id="shader-vs" type="x-shader/x-vertex">
+    attribute vec3 aVertexNormal;
+    attribute vec3 aVertexPosition;
+   
+    uniform mat4 uMVMatrix;
+    uniform mat4 uPMatrix;
+    uniform mat3 uNMatrix;
+
+    varying vec3 normal;
+    varying vec3 position;
+    varying vec3 diffuse;
+
+    uniform float minh;
+    uniform float maxh;
+
+    void main(void) {
+
+        vec4 vertexPositionEye4 = uMVMatrix * vec4(aVertexPosition, 1.0);
+        
+        position = (uMVMatrix*vec4(aVertexPosition, 1.0)).xyz;
+        normal = normalize(uNMatrix * aVertexNormal);
+
+        // Colormap
+        float h = (aVertexPosition.z - minh) / (maxh - minh);
+        float mid = (minh + maxh) / 2.0;
+        if (h < 0.25) {
+            diffuse = vec3(192.0/255.0, 119.0/255.0, 0.0/255.0); 
+        } else if (h < 0.50) {
+            diffuse = vec3(84.0/255.0, 117.0/255.0, 68.0/255.0); 
+        } else if (h < 0.75) {
+            diffuse = vec3(41.0/255.0, 63.0/255.0, 44.0/255.0);
+        } else {
+            diffuse = vec3(1.0, 1.0, 1.0);
+        }
+        
+        gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+        
+    }
+</script>
+  
+<script id="shader-fs" type="x-shader/x-fragment">
+    precision mediump float;
+
+    uniform vec3 uLightPosition;
+    uniform vec3 uAmbientLightColor;
+    uniform vec3 uDiffuseLightColor;
+    uniform vec3 uSpecularLightColor;
+
+    uniform vec3 uAmbientMaterialColor;
+    uniform vec3 uDiffuseMaterialColor;
+    uniform vec3 uSpecularMaterialColor;
+    uniform float uShininess;
+
+    varying vec3 normal;
+    varying vec3 position;
+    varying vec3 diffuse;
+    
+    uniform bool fog;
+
+    void main(void) {
+
+        // Calculate the vector (l) to the light source
+        vec3 vectorToLightSource = normalize(uLightPosition - position);
+        
+        // Transform the normal (n) to eye coordinates
+        vec3 normalEye = normalize(normal);
+        
+        // Calculate n dot l for diffuse lighting
+        float diffuseLightWeightning = max(dot(normalEye, 
+                                        vectorToLightSource), 0.0);
+        
+        // Calculate the reflection vector (r) that is needed for specular light
+        vec3 reflectionVector = normalize(reflect(-vectorToLightSource, normalEye));
+        
+        // The camera in eye coordinates is located in the origin and is pointing
+        // along the negative z-axis. Calculate viewVector (v) 
+        // in eye coordinates as:
+        // (0.0, 0.0, 0.0) - position
+        vec3 viewVectorEye = -normalize(position);
+        
+        float ndoth = max(dot(reflectionVector, normalEye), 0.0);
+        
+        float specularLightWeightning = pow(ndoth, uShininess);
+
+        // Sum up all three reflection components and send to the fragment shader
+        vec4 fColor = vec4(((uAmbientLightColor*uAmbientMaterialColor)
+                    + (uDiffuseLightColor*diffuse)*diffuseLightWeightning
+                    + ((uSpecularLightColor*uSpecularMaterialColor) * specularLightWeightning)),1.0);
+        
+        float fogCoord = (gl_FragCoord.z/gl_FragCoord.w);
+        vec4 fogColor = vec4(1.0, 1.0, 1.0, 1.0);
+        float fogFactor = exp2( -0.05*0.05*5.0*fogCoord*fogCoord*fogCoord*fogCoord*1.442695);
+        if (fog) {
+            fogFactor = clamp(fogFactor, 0.0, 1.0);
+        } else {
+            fogFactor = 1.0;
+        }
+
+        gl_FragColor = mix(fogColor, fColor, fogFactor);
+         
+    }
+</script>
+
+<script src="gl-matrix-min.js"></script>
+<script src="webgl-util.js"></script>
+<script src="Terrain.js"></script>  
+<script src="mp2.js"></script>   
+<body onload="startup();">
+ <canvas id="myGLCanvas" width="800" height="600"></canvas>
+    <form id="input_form">
+        <fieldset>
+            <legend>Rendering Parameters</legend>
+         <input type="radio" name="primitive" id="wireframe" value="wireframe"> Wireframe
+         <input type="radio" name="primitive" id="polygon" id="polygon" value="polygon" checked> Polygon
+         <input type="radio" name="primitive" id="wirepoly" value="wirepoly" > Polygon with Edges
+         <input type="checkbox" name="primitive" id="fog" value="fog" > Fog
+        </fieldset>
+    </form>
+    <form id="input_form">
+        <fieldset>
+            <legend>Documentation</legend>
+        <p> Use &#8592, &#8594 to roll the plane left and right</p>
+        <p> Use &#8593, &#8595 to pitch the plane up and down</p>
+        <p> Use &#43, &#8722 to increase and decrease the speed</p>
+        </fieldset>
+    </form>
+</body>
+
+</html>

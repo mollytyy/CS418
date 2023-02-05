@@ -1,0 +1,71 @@
+<!DOCTYPE HTML> 
+<html lang="en"> 
+<head>
+<title>MP3: Environment Mapping (tyy2) </title>
+<meta charset="utf-8"> 
+</head>
+
+<script id="shader-vs" type="x-shader/x-vertex">
+    attribute vec3 normal;
+    attribute vec3 position;
+    
+    uniform mat4 projection, modelview, world;
+    
+    varying vec3 vertexnormal;
+    varying vec3 vertexPosition;
+   
+    uniform mat4 uMVMatrix;
+    uniform mat4 uPMatrix;
+    uniform mat3 uNMatrix;
+
+    varying vec3 vposition;
+    varying vec3 vnormal;
+
+    void main(void) {
+
+        vec4 vertexPositionEye4 = uMVMatrix * vec4(position, 1.0);
+        
+        vposition = vertexPositionEye4.xyz / vertexPosition.w;
+        gl_Position = projection * modelview * world * position;
+        vposition = (world * position).xyz;
+        vworld = mat3(world)*normal;
+    }
+</script>
+  
+<script id="shader-fs" type="x-shader/x-fragment">
+    precision mediump float;
+    varying vec4 color;
+    void main() {
+        gl_FragColor = color;
+    }
+</script>
+
+<script src="gl-matrix-min.js"></script>
+<script src="webgl-util.js"></script>
+<script src="TriMesh.js"></script>  
+<script src="mp3.js"></script>   
+<body onload="startup();">
+ <canvas id="myGLCanvas" width="800" height="800"></canvas>
+    <form id="input_form">
+        <fieldset>
+            <legend>Rendering Parameters</legend>
+         <input type="radio" name="primitive" id="london" value="london" checked> London
+         <input type="radio" name="primitive" id="somewhere" value="somewhere"> Somewhere
+        </fieldset>
+        <fieldset>
+            <legend>Teapot Parameters</legend>
+         <input type="radio" name="primitive" id="london" value="london" checked> London
+         <input type="radio" name="primitive" id="somewhere" value="somewhere"> Somewhere
+        </fieldset>
+    </form>
+    <form id="input_form">
+        <fieldset>
+            <legend>Documentation</legend>
+        <p> Use &#8592, &#8594 to roll the plane left and right</p>
+        <p> Use &#8593, &#8595 to pitch the plane up and down</p>
+        <p> Use &#43, &#8722 to increase and decrease the speed</p>
+        </fieldset>
+    </form>
+</body>
+
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>MP1 - Dancing Logo (tyy2)</title>
+<meta charset="utf-8"> 
+<script id="shader-vs" type="x-shader/x-vertex">
+uniform mat4 uMvMatrix;
+
+attribute vec4 aVertexColor;
+attribute vec3 aVertexPosition;
+
+varying vec4 vColor;
+
+void main(void) {
+
+    gl_Position = uMvMatrix*vec4(aVertexPosition, 1.0);
+    vColor = aVertexColor;
+}
+</script><script id="shader-fs" type="x-shader/x-fragment">
+
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+
+varying vec4 vColor;
+void main(void) {
+        gl_FragColor = vColor;
+ }
+</script><script src="gl-matrix-min.js"></script><script src="mp1.js"></script><script type="text/javascript" src="webgl-util.js"></script></head>
+<body onload="startup();">
+  <canvas id="myGLCanvas" width="500" height="500"></canvas>
+
+<p>
+  <label class="418">
+    <input type="radio" name="choice" value="illinois" checked />
+    <i></i> I-L-L
+    </label> <br>
+  <label class="418">
+    <input type="radio" name="choice" value="cat" />
+    <i></i> cat
+  </label>
+</p>
+</body>
+</html>
